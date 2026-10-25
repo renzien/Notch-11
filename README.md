@@ -82,7 +82,3 @@ dotnet build -c Release
     ├── AiAppMonitor.cs             # Active AI app detector & prompt dispatcher
     └── AppSettings.cs              # Process priority & Registry startup persistence
 ```
-
-## License
-
-MIT
