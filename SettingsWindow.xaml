@@ -1,0 +1,155 @@
+<Window x:Class="DynamicIsland.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Dynamic Island Settings"
+        Width="330" Height="225"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        Topmost="True"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False">
+
+    <Window.Resources>
+        <!-- Modern iOS / Windows 11 Pill Toggle Switch -->
+        <Style x:Key="ModernToggleStyle" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid Width="42" Height="22" Background="Transparent">
+                            <Border x:Name="Track"
+                                    CornerRadius="11"
+                                    Background="#2AFFFFFF"
+                                    BorderBrush="#22FFFFFF"
+                                    BorderThickness="1"/>
+                            <Ellipse x:Name="Thumb"
+                                     Width="16" Height="16"
+                                     Fill="#FFFFFF"
+                                     HorizontalAlignment="Left"
+                                     VerticalAlignment="Center"
+                                     Margin="3,0,0,0"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Track" Property="Background" Value="#30D158"/>
+                                <Setter TargetName="Track" Property="BorderBrush" Value="#5030D158"/>
+                                <Setter TargetName="Thumb" Property="Margin" Value="23,0,0,0"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Thumb" Property="Opacity" Value="0.92"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="12">
+        <Border Background="#10131A"
+                BorderBrush="#2AFFFFFF"
+                BorderThickness="1"
+                CornerRadius="16"
+                MouseLeftButtonDown="Header_MouseLeftButtonDown">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="20" Color="#000000" Opacity="0.65" ShadowDepth="4" Direction="270"/>
+            </Border.Effect>
+
+            <Grid Margin="16,14,16,14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="8" Height="8" CornerRadius="4" Background="#30D158" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Settings" Foreground="#FFFFFF" FontSize="13.5" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <Button Grid.Column="1" Click="CloseButton_Click" Cursor="Hand"
+                            Width="24" Height="24" Background="Transparent" BorderThickness="0">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="CloseBg" Background="#15FFFFFF" CornerRadius="12">
+                                    <Path Data="M 7,7 L 13,13 M 13,7 L 7,13" Stroke="#CCCCCC" StrokeThickness="1.5"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="CloseBg" Property="Background" Value="#35FF453A"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+
+                <!-- Option 1: High Priority (CPU + Startup Priority) -->
+                <Border Grid.Row="1" Background="#12FFFFFF" BorderBrush="#18FFFFFF" BorderThickness="1"
+                        CornerRadius="11" Padding="12,10" Margin="0,0,0,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel VerticalAlignment="Center" Margin="0,0,10,0">
+                            <TextBlock Text="High Priority" Foreground="#FFFFFF" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBlock Text="Prioritize app &amp; auto-launch when PC starts"
+                                       Foreground="#99FFFFFF" FontSize="10" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <CheckBox x:Name="HighPriorityCheckBox"
+                                  Grid.Column="1"
+                                  Style="{StaticResource ModernToggleStyle}"
+                                  VerticalAlignment="Center"
+                                  Click="HighPriorityCheckBox_Click"/>
+                    </Grid>
+                </Border>
+
+                <!-- Option 2: Run on Windows Startup -->
+                <Border Grid.Row="2" Background="#12FFFFFF" BorderBrush="#18FFFFFF" BorderThickness="1"
+                        CornerRadius="11" Padding="12,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel VerticalAlignment="Center" Margin="0,0,10,0">
+                            <TextBlock Text="Launch on Startup" Foreground="#FFFFFF" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBlock Text="Start automatically when Windows boots"
+                                       Foreground="#99FFFFFF" FontSize="10" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <CheckBox x:Name="StartupCheckBox"
+                                  Grid.Column="1"
+                                  Style="{StaticResource ModernToggleStyle}"
+                                  VerticalAlignment="Center"
+                                  Click="StartupCheckBox_Click"/>
+                    </Grid>
+                </Border>
+
+                <!-- Footer Status -->
+                <TextBlock x:Name="StatusFooterText"
+                           Grid.Row="3"
+                           Text="Ready"
+                           Foreground="#88FFFFFF"
+                           FontSize="10"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Bottom"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

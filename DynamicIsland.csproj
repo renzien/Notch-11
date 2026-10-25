@@ -1,0 +1,4 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="SdkBuild.props" Condition="'$(MSBuildRuntimeType)' == 'Core'" />
+  <Import Project="Launcher.targets" Condition="'$(MSBuildRuntimeType)' != 'Core'" />
+</Project>
