@@ -1,4 +1,4 @@
-# Dynamic Island for Windows 11
+# Notch 11
 
 A lightweight, native Dynamic Island notch for Windows 11 built with C# (.NET 8 / WPF) and Win32 APIs.
 
