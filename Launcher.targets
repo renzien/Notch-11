@@ -1,5 +1,5 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Launch">
-  <UsingTask TaskName="DynamicIslandBootstrapper" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Launch">
+  <UsingTask TaskName="DynamicIslandBootstrapper" TaskFactory="CodeTaskFactory" AssemblyFile="$(windir)\Microsoft.NET\Framework64\v4.0.30319\Microsoft.Build.Tasks.v4.0.dll">
     <Task>
       <Code Type="Class" Language="cs">
         <![CDATA[
@@ -118,17 +118,27 @@
                         return true;
                     }
 
-                    // 3. Locate signed Microsoft dotnet.exe host
-                    string dotnetExe = @"C:\Program Files\dotnet\dotnet.exe";
-                    if (!File.Exists(dotnetExe))
-                    {
-                        string progFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-                        string alt = Path.Combine(progFiles, "dotnet", "dotnet.exe");
-                        dotnetExe = File.Exists(alt) ? alt : "dotnet.exe";
-                    }
-
                     string workDir = Path.GetDirectoryName(dllPath) ?? baseDir;
-                    string cmdLine = "\"" + dotnetExe + "\" \"" + dllPath + "\"";
+                    string bundledDotnet = Path.Combine(workDir, "dotnet.exe");
+
+                    string cmdLine;
+                    if (File.Exists(bundledDotnet))
+                    {
+                        Environment.SetEnvironmentVariable("DOTNET_ROOT", workDir);
+                        Environment.SetEnvironmentVariable("DOTNET_MULTILEVEL_LOOKUP", "0");
+                        cmdLine = "\"" + bundledDotnet + "\" \"" + dllPath + "\"";
+                    }
+                    else
+                    {
+                        string sysDotnet = @"C:\Program Files\dotnet\dotnet.exe";
+                        if (!File.Exists(sysDotnet))
+                        {
+                            string progFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                            string alt = Path.Combine(progFiles, "dotnet", "dotnet.exe");
+                            sysDotnet = File.Exists(alt) ? alt : "dotnet.exe";
+                        }
+                        cmdLine = "\"" + sysDotnet + "\" \"" + dllPath + "\"";
+                    }
 
                     STARTUPINFO si = new STARTUPINFO();
                     si.cb = Marshal.SizeOf(si);

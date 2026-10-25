@@ -1,4 +1,4 @@
-# Notch 11
+# Dynamic Island for Windows 11
 
 A lightweight, native Dynamic Island notch for Windows 11 built with C# (.NET 8 / WPF) and Win32 APIs.
 
@@ -82,3 +82,7 @@ dotnet build -c Release
     ├── AiAppMonitor.cs             # Active AI app detector & prompt dispatcher
     └── AppSettings.cs              # Process priority & Registry startup persistence
 ```
+
+## License
+
+MIT
