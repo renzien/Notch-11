@@ -383,7 +383,7 @@ public partial class MainWindow : Window
 
             if (!token.IsCancellationRequested)
             {
-                if (_isHovered)
+                if (_isHovered || _isLyricsExpanded)
                 {
                     MorphTo(IslandVisualState.Expanded);
                 }
@@ -422,7 +422,7 @@ public partial class MainWindow : Window
 
             if (!token.IsCancellationRequested)
             {
-                if (_isHovered)
+                if (_isHovered || _isLyricsExpanded)
                 {
                     MorphTo(IslandVisualState.Expanded);
                 }
@@ -487,7 +487,7 @@ public partial class MainWindow : Window
 
             if (!token.IsCancellationRequested)
             {
-                if (_isHovered)
+                if (_isHovered || _isLyricsExpanded)
                 {
                     MorphTo(IslandVisualState.Expanded);
                 }
@@ -756,9 +756,15 @@ public partial class MainWindow : Window
         _isLyricsExpanded = !_isLyricsExpanded;
         UpdateLyricsToggleState();
 
-        if (_currentState == IslandVisualState.Expanded)
+        if (_isLyricsExpanded)
         {
+            // Saat tombol lirik diklik ON: Dynamic Island otomatis tetap terbuka (pinned)
             MorphTo(IslandVisualState.Expanded);
+        }
+        else
+        {
+            // Saat tombol lirik diklik lagi (OFF): otomatis tutup kembali Dynamic Island
+            MorphTo(IslandVisualState.Compact);
         }
     }
 
@@ -1161,6 +1167,13 @@ public partial class MainWindow : Window
     {
         _isHovered = false;
         if (_currentState is IslandVisualState.ChargingPopup or IslandVisualState.TwsPopup or IslandVisualState.NotificationPopup) return;
+
+        // Jika mode baca lirik sedang aktif (tombol lirik diklik), Dynamic Island tetap terbuka terus
+        // sampai tombol lirik diklik lagi oleh pengguna
+        if (_isLyricsExpanded && _activeExpandedPage == 0)
+        {
+            return;
+        }
 
         // Jika pengguna sedang aktif mengetik teks di kolom prompt AI, jangan tutup tiba-tiba
         if (_activeExpandedPage == 2 && AiPromptTextBox.IsKeyboardFocused && !string.IsNullOrEmpty(AiPromptTextBox.Text))
